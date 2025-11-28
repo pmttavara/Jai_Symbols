@@ -8,21 +8,18 @@
 - In your project's metaprogram, call `add()` for `.TYPECHECKED` messages. Once the build is done, call `write(*symbols, ".build/.jai_symbols")`. The Python extension only searches for `.build/.jai_symbols`.
 - Put `Jai.py` in `%AppData%/10x/PythonScripts`.
 - In your 10x workspace's settings, add `*.jai_symbols` to the Include Filter. This is how the Python extension finds the generated symbols list.
-- In the 10x menu bar > `Settings` > `Key Bindings...`, replace your key binding for `GotoSymbolDefinition` with `JAI_GotoSymbolDefinition`.
-- (optional) put `jai_symbols.10x_syntax` in `%AppData%/10x/Settings/SyntaxHighlighting`.
+- In the 10x menu bar > `Settings` > `Key Bindings...`, replace your key binding for `GotoSymbolDefinition` with `JAI_GotoNextSymbolDefinition`.
+- (Optional) In the 10x menu bar > `Settings` > `Key Bindings...`, add a new key binding for `JAI_GotoPrevSymbolDefinition` (e.g., Alt-Shift-G to complement Alt-G).
+- (Optional) put `jai_symbols.10x_syntax` in `%AppData%/10x/Settings/SyntaxHighlighting`.
 
 ## Necessary improvements
 
-- Non-bozo scope awareness
-    - in the Python extension, prefer the closest result before the current cursor line:column, instead of arbitrarily jumping to "result #0"
-- Raw search fallback
-    - Just grep all open code files for `<word_at_cursor>\s*:`
-- Member resolution
-    - in the Python extension, parse `a.b.c.d` and recursively narrow the candidates list
-        - determine the possible types of `a` from the search results: `T1`, `T2`, etc.
-        - when searching the possible declarations of `b`, prune those candidates that are not children of `T1`, `T2`, etc.
-        - recursively repeat this process for all possible declarations of `c`, `d`, etc.
-        - if this does not resolve to a single declaration, then fall back to the regular cycling behaviour, to avoid making the command stateful
+- Member resolution: in the Python extension, parse `a.b.c.d` and recursively narrow the candidates list
+    - determine the possible types of `a` from the search results: `T1`, `T2`, etc.
+    - when searching the possible declarations of `b`, prune those candidates that are not children of `T1`, `T2`, etc.
+    - recursively repeat this process for all possible declarations of `c`, `d`, etc.
+    - if this does not resolve to a single declaration, then fall back to the regular cycling behaviour, to avoid making the command stateful
+- Support jumping to the definition of backslashed identifiers (currently backslashed identifiers are only supported at the "destination" declaration being jumped to, not the "source" identifier under the cursor)
 
 ## Example metaprogram
 ```jai
@@ -59,7 +56,7 @@ build :: () {
         }
     }
 
-    Jai_Symbols.write(*jai_symbols, ".build/.jai_symbols");
+    if jai_symbols.count { Jai_Symbols.write(*jai_symbols, ".build/.jai_symbols"); }
 }
 
 #run build();
@@ -69,4 +66,6 @@ build :: () {
 
 - Advanced scope awareness
     - Compute and output the declaration/liveness scopes for definitions and match against those in the extension
+    - Compute and output block-comment/line-comment ranges so the extension ignores those during textual search
+        - Alternative: Lex files before searching them (difficult due to )
 

@@ -12,7 +12,7 @@
 #----------------------------------------------
 # settings
 
-Extensions:					*.jai_tags
+Extensions:					*.jai_symbols
 
 #----------------------------------------------
 # colour rules
