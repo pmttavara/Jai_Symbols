@@ -6,7 +6,7 @@
 
 - Put `Jai_Symbols.jai` in your modules folder.
 - In your project's metaprogram, call `add()` for `.TYPECHECKED` messages. Once the build is done, call `write(*symbols, ".build/.jai_symbols")`. The Python extension only searches for `.build/.jai_symbols`.
-- Put `Jai.py` in `%AppData%/10x/PythonScripts`.
+- Put `JaiGotoDefinition.py` in `%AppData%/10x/PythonScripts`.
 - In your 10x workspace's settings, add `*.jai_symbols` to the Include Filter. This is how the Python extension finds the generated symbols list.
 - In the 10x menu bar > `Settings` > `Key Bindings...`, replace your key binding for `GotoSymbolDefinition` with `JAI_GotoNextSymbolDefinition`.
 - (Optional) In the 10x menu bar > `Settings` > `Key Bindings...`, add a new key binding for `JAI_GotoPrevSymbolDefinition` (e.g., Alt-Shift-G to complement Alt-G).
@@ -67,5 +67,5 @@ build :: () {
 - Advanced scope awareness
     - Compute and output the declaration/liveness scopes for definitions and match against those in the extension
     - Compute and output block-comment/line-comment ranges so the extension ignores those during textual search
-        - Alternative: Lex files before searching them (difficult due to )
+        - Alternative: Lex files before searching them (difficult due to code that may not compile)
 
