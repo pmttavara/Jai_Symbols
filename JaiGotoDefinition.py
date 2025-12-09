@@ -1,4 +1,5 @@
 import N10X
+import os
 import re
 from functools import cmp_to_key
 
@@ -21,23 +22,44 @@ def get_word(line: str, index: int):
 
     start = end = index
 
-    while start > 0 and (line[start - 1].isalnum() or line[start - 1] == '_'):
+    # @Todo: This lexing is pretty hacky. Is there a way to simplify it?
+    if line[:start].strip().endswith("\\"):
+        while start > 0 and (line[start - 1] == '\\' or line[start - 1] == ' '):
+            start -= 1
+        while end < len(line) and (line[end] == '\\' or line[end] == ' '):
+            end += 1
+
+    while start > 0 and (line[start - 1].isalnum() or line[start - 1] == '_' or line[start - 1] == '\\'):
         start -= 1
+        seeker = start - 1
+        while seeker > 0 and line[seeker - 1] == ' ':
+            seeker -= 1
+        if seeker > 0 and line[seeker - 1] == '\\':
+            start = seeker
 
-    while end < len(line) and (line[end].isalnum() or line[end] == '_'):
-        end += 1
+    while end < len(line) and (line[end].isalnum() or line[end] == '_' or line[end] == '\\'):
+        if end < len(line) and line[end] == '\\':
+            end += 1
+            while end < len(line) and (line[end].isalnum() or line[end] == ' '):
+                end += 1
+        else:
+            end += 1
 
-    return line[start:end], start
+    slice = line[start:end]
+    slice = "".join([part.strip() for part in slice.split('\\')]);
+    # N10X.Editor.LogTo10XOutput(f"Word is {slice}!\n")
+
+    return slice
 
 def jai_decl_regex(varname: str):
-    interspersed = r"".join(re.escape(ch) + r"(?:\\\s*)?" for ch in varname)
+    interspersed = r"".join(re.escape(ch) + r"(?:[\\\s]*)?" for ch in varname)
     return re.compile(rf"(?<![A-Za-z0-9_])({interspersed})\s*:")
 
 def JAI_GotoSymbolDefinition(dir: int):
     line = N10X.Editor.GetCurrentLine()
     current_file = N10X.Editor.GetCurrentFilename()
     current_pos = N10X.Editor.GetCursorPos()
-    word, word_start = get_word(line, current_pos[0])
+    word = get_word(line, current_pos[0])
 
     search_results = [] # textual search results
     symbol_results = [] # Jai_Symbols.jai module's symbol results
@@ -54,8 +76,12 @@ def JAI_GotoSymbolDefinition(dir: int):
             files_to_search[open_filename] = open_filename
 
         for filename in N10X.Editor.GetWorkspaceFiles():
-            if filename.endswith(".build/.jai_symbols"):
-                symbols_path = filename
+            if symbols_path == "":
+                filedir = os.path.dirname(filename)
+                possible_symbols_path = filedir + "/.build/.jai_symbols"
+                if os.path.isfile(possible_symbols_path):
+                    symbols_path = possible_symbols_path
+                    # N10X.Editor.LogTo10XOutput(f"Found symbols at {symbols_path}!\n")
 
             if filename.endswith(".jai"):
                 files_to_search[filename] = filename

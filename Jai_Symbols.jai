@@ -40,7 +40,7 @@ PRELOAD_BUILTINS :: string.[
 
 EMPTY_NAME :: "-";
 
-add_symbol :: (symbols: *Symbols, name: string, type: string, parent: string, filename: string, line: int, column: int) {
+add_symbol :: (symbols: *Symbols, name: string, type_: string, parent_: string, filename: string, line: int, column: int) {
     if !filename {
         return;
     }
@@ -56,6 +56,8 @@ add_symbol :: (symbols: *Symbols, name: string, type: string, parent: string, fi
     if !is_alpha(name[0]) {
         return;
     }
+    type   := ifx type_   then type_   else "-";
+    parent := ifx parent_ then parent_ else "-";
 
     symbol := Symbol.{ name, type, parent, filename, line, column };
     // print("Adding symbol: %\n", symbol);
@@ -220,7 +222,7 @@ add :: (symbols: *Symbols, message: *Message_Typechecked) {
     }
 }
 
-write :: (symbols: *Symbols, filename: string) {
+write :: (symbols: *Symbols, filename := ".build/.jai_symbols") {
     sb: String_Builder;
 
     #if DEBUG {

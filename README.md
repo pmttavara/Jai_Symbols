@@ -7,7 +7,6 @@
 - Put `Jai_Symbols.jai` in your modules folder.
 - In your project's metaprogram, call `add()` for `.TYPECHECKED` messages. Once the build is done, call `write(*symbols, ".build/.jai_symbols")`. The Python extension only searches for `.build/.jai_symbols`.
 - Put `JaiGotoDefinition.py` in `%AppData%/10x/PythonScripts`.
-- In your 10x workspace's settings, add `*.jai_symbols` to the Include Filter. This is how the Python extension finds the generated symbols list.
 - In the 10x menu bar > `Settings` > `Key Bindings...`, replace your key binding for `GotoSymbolDefinition` with `JAI_GotoNextSymbolDefinition`.
 - (Optional) In the 10x menu bar > `Settings` > `Key Bindings...`, add a new key binding for `JAI_GotoPrevSymbolDefinition` (e.g., Alt-Shift-G to complement Alt-G).
 - (Optional) put `jai_symbols.10x_syntax` in `%AppData%/10x/Settings/SyntaxHighlighting`.
@@ -19,7 +18,6 @@
     - when searching the possible declarations of `b`, prune those candidates that are not children of `T1`, `T2`, etc.
     - recursively repeat this process for all possible declarations of `c`, `d`, etc.
     - if this does not resolve to a single declaration, then fall back to the regular cycling behaviour, to avoid making the command stateful
-- Support jumping to the definition of backslashed identifiers (currently backslashed identifiers are only supported at the "destination" declaration being jumped to, not the "source" identifier under the cursor)
 
 ## Example metaprogram
 ```jai
