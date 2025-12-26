@@ -54,7 +54,7 @@ build :: () {
         }
     }
 
-    if jai_symbols.count { Jai_Symbols.write(*jai_symbols, ".build/.jai_symbols"); }
+    if jai_symbols.count { Jai_Symbols.write(*jai_symbols); }
 }
 
 #run build();

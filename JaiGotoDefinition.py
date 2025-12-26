@@ -3,6 +3,11 @@ import os
 import re
 from functools import cmp_to_key
 
+import time
+import sys
+
+print_perf = False
+
 def compare_results(a, b):
     if a["filename"] != b["filename"]: return -1 if a["filename"] < b["filename"] else 1 # file
     if a["pos"][1]   != b["pos"][1]:   return       a["pos"][1]   - b["pos"][1]          # Y (line)
@@ -14,6 +19,8 @@ def compare_results(a, b):
     return 0
 
 def get_word(line: str, index: int):
+    begin = time.perf_counter()
+
     if index >= len(line):
        index = len(line)
 
@@ -49,13 +56,20 @@ def get_word(line: str, index: int):
     slice = "".join([part.strip() for part in slice.split('\\')]);
     # N10X.Editor.LogTo10XOutput(f"Word is {slice}!\n")
 
+    end = time.perf_counter()
+    if print_perf: N10X.Editor.LogTo10XOutput(f"{sys._getframe().f_code.co_name}: {int((end - begin) * 1000000)} us\n") # @Perf
+
     return slice
 
 def jai_decl_regex(varname: str):
-    interspersed = r"".join(re.escape(ch) + r"(?:[\\\s]*)?" for ch in varname)
-    return re.compile(rf"(?<![A-Za-z0-9_])({interspersed})\s*:")
+    interspersed = r"".join(re.escape(ch) + r"(\\ *)*" for ch in varname)
+    result = re.compile(rf"(?<![A-Za-z0-9_])({interspersed}) *:")
+
+    return result
 
 def JAI_GotoSymbolDefinition(dir: int):
+    begin = time.perf_counter()
+
     line = N10X.Editor.GetCurrentLine()
     current_file = N10X.Editor.GetCurrentFilename()
     current_pos = N10X.Editor.GetCursorPos()
@@ -120,11 +134,14 @@ def JAI_GotoSymbolDefinition(dir: int):
     for filename in files_to_search:
         try:
             with open(filename, 'r', encoding='utf-8') as file:
+                file_begin = time.perf_counter()
+
                 for line_number, line in enumerate(file, start=1):
                     index_of_first_char = line.find(word[0])
                     index_of_colon      = line[index_of_first_char:].find(":")
 
                     if index_of_first_char >= 0 and index_of_colon >= 0: # skip obviously fruitless lines
+                        # N10X.Editor.LogTo10XOutput(f"Fruitful line!\n")
                         for match in regex.finditer(line):
                             pos = (match.start(1), line_number - 1)
                             loc = (filename, pos)
@@ -139,6 +156,9 @@ def JAI_GotoSymbolDefinition(dir: int):
                             search_results.append(result)
                             if loc in loc_to_symbol:
                                 symbol_results.append(loc_to_symbol[loc])
+
+                file_end = time.perf_counter()
+                if print_perf: N10X.Editor.LogTo10XOutput(f"{filename}: {int((file_end - file_begin) * 1000000)} us\n") # @Perf
 
         except FileNotFoundError:
             N10X.Editor.LogTo10XOutput(f"Couldn't open {filename}!\n")
@@ -159,7 +179,10 @@ def JAI_GotoSymbolDefinition(dir: int):
             all_results.append(result)
             unique_locs[loc] = loc
 
+    sort_begin = time.perf_counter()
     all_results = sorted(all_results, key=cmp_to_key(compare_results))
+    sort_end = time.perf_counter()
+    if print_perf: N10X.Editor.LogTo10XOutput(f"sort: {int((sort_end - sort_begin) * 1000000)} us\n") # @Perf
 
     result_i = 0
     current = (current_file, current_pos)
@@ -180,6 +203,10 @@ def JAI_GotoSymbolDefinition(dir: int):
     else:
         # Gracefully fallback to GotoSymbolDefinition.
         N10X.Editor.ExecuteCommand("GotoSymbolDefinition")
+
+    end = time.perf_counter()
+    if print_perf: N10X.Editor.LogTo10XOutput(f"{sys._getframe().f_code.co_name}: {int((end - begin) * 1000000)} us\n") # @Perf
+    if print_perf: N10X.Editor.LogTo10XOutput(f"\n")
 
 def JAI_GotoNextSymbolDefinition():
     JAI_GotoSymbolDefinition(+1)
