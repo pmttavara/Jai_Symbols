@@ -85,11 +85,9 @@ def JAI_GotoSymbolDefinition(dir: int):
 
     symbols_path = ""
     if len(word) != 0:
-        open_filename = N10X.Editor.GetCurrentFilename()
-        if open_filename != "":
-            files_to_search[open_filename] = open_filename
+        files_to_check = N10X.Editor.GetOpenFiles() + N10X.Editor.GetWorkspaceFiles()
 
-        for filename in N10X.Editor.GetWorkspaceFiles():
+        for filename in files_to_check:
             if symbols_path == "":
                 filedir = os.path.dirname(filename)
                 possible_symbols_path = filedir + "/.build/.jai_symbols"
